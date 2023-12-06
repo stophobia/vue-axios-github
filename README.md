@@ -1,26 +1,26 @@
 [![Travis](https://img.shields.io/travis/superman66/vue-axios-github.svg)](https://travis-ci.org/superman66/vue-axios-github)
-# 一个项目学会前端实现登录拦截
+# A project learns how to implement login interception on the front end
 
-> 一个项目学会vue全家桶+axios实现登录、拦截、登出功能，以及利用axios的http拦截器拦截请求和响应。
+> A project learns to use vue family bucket + axios to implement login, interception, and logout functions, and to use axios's http interceptor to intercept requests and responses.
 
-点击这里查看👉 [Demo](https://github.com/superman66/vue-axios-github)
+Click here to view 👉 [Demo](https://github.com/superman66/vue-axios-github)
 
-页面打不开？可能你需要翻墙。[点击查看翻墙推荐](https://github.com/superman66/mac/issues/4)
-## 前言
-该项目是利用了Github 提供的personal token作为登录token，通过token访问你的Repository List。通过这个项目学习如何实现一个前端项目中所需要的
-登录及拦截、登出、token失效的拦截及对应 axios 拦截器的使用。
+Can't open the page? Maybe you need to jump over the wall. [Click to view circumvention recommendations](https://github.com/superman66/mac/issues/4)
+## Preface
+This project uses the personal token provided by Github as a login token, and accesses your Repository List through the token. Learn how to implement what is needed in a front-end project through this project
+Login and interception, logout, token invalidation interception and the use of the corresponding axios interceptor.
 
-**准备**
+**Prepare**
 
-你需要先生成自己的 Github Personal Token（[生成Token](https://github.com/settings/tokens/new)）。
-Token 生成后 访问 [Demo](http://chenhuichao.com/vue-axios-github/)，即可查看你的Repository List。
+You need to generate your own Github Personal Token first ([Generate Token](https://github.com/settings/tokens/new)).
+After the Token is generated, visit [Demo](http://chenhuichao.com/vue-axios-github/) to view your Repository List.
 
-## 项目结构
+## Project structure
 
 ```
 .
 ├── README.md
-├── dist  // 打包构建后的文件夹
+├── dist  // Package the built folder
 │   ├── build.js
 │   └── build.js.map
 ├── index.html
@@ -32,31 +32,31 @@ Token 生成后 访问 [Demo](http://chenhuichao.com/vue-axios-github/)，即可
 │   │   ├── icon.css
 │   │   └── logo.png
 │   ├── constant
-│   │   └── api.js  // 配置api接口文件
-│   ├── http.js // 封装fetch、post请求及http 拦截器配置文件
+│   │   └── api.js  // Configure api interface file
+│   ├── http.js // Encapsulate fetch, post requests and http interceptor configuration files
 │   ├── index.vue
 │   ├── login.vue
 │   ├── main.js
 │   ├── repository.vue
-│   ├── router.js // 路由配置文件
+│   ├── router.js // routing configuration file
 │   └── store
 │       ├── store.js  
 │       └── types.js  // vuex types
 └── webpack.config.js
 ```
 
-### 技术栈
+### technology stack
 * Vue 2.0
 * vue-router
 * vuex
 * axios
 * vue-material
 
-### 登录拦截逻辑
+### Login interception logic
 
-#### 第一步：路由拦截
-首先在定义路由的时候就需要多添加一个自定义字段`requireAuth`，用于判断该路由的访问是否需要登录。如果用户已经登录，则顺利进入路由，
-否则就进入登录页面。
+#### Step one: Route interception
+First, when defining a route, you need to add a custom field `requireAuth` to determine whether access to the route requires login. If the user is already logged in, the route will be entered successfully.
+Otherwise, go to the login page.
 ```javascript
 const routes = [
     {
@@ -68,7 +68,7 @@ const routes = [
         path: '/repository',
         name: 'repository',
         meta: {
-            requireAuth: true,  // 添加该字段，表示进入这个路由是需要登录的
+            requireAuth: true,  // Add this field to indicate that you need to log in to enter this route
         },
         component: Repository
     },
@@ -79,18 +79,18 @@ const routes = [
     }
 ];
 ```
-定义完路由后，我们主要是利用`vue-router`提供的钩子函数`beforeEach()`对路由进行判断。
+After defining the route, we mainly use the hook function `beforeEach()` provided by `vue-router` to judge the route.
 
 ```javascript
 router.beforeEach((to, from, next) => {
-    if (to.meta.requireAuth) {  // 判断该路由是否需要登录权限
-        if (store.state.token) {  // 通过vuex state获取当前的token是否存在
+    if (to.meta.requireAuth) {  // Determine whether the route requires login permissions
+        if (store.state.token) {  // Get whether the current token exists through vuex state
             next();
         }
         else {
             next({
                 path: '/login',
-                query: {redirect: to.fullPath}  // 将跳转的路由path作为参数，登录成功后跳转到该路由
+                query: {redirect: to.fullPath}  // Use the jump route path as a parameter and jump to this route after successful login.
             })
         }
     }
@@ -99,31 +99,31 @@ router.beforeEach((to, from, next) => {
     }
 })
 ```
-每个钩子方法接收三个参数：
+Each hook method receives three parameters:
 
-* to: Route: 即将要进入的目标 路由对象
-* from: Route: 当前导航正要离开的路由
-* next: Function: 一定要调用该方法来 resolve 这个钩子。执行效果依赖 next 方法的调用参数。
-  * next(): 进行管道中的下一个钩子。如果全部钩子执行完了，则导航的状态就是 confirmed （确认的）。
-  * next(false): 中断当前的导航。如果浏览器的 URL 改变了（可能是用户手动或者浏览器后退按钮），那么 URL 地址会重置到 from 路由对应的地址。
-  * next('/') 或者 next({ path: '/' }): 跳转到一个不同的地址。当前的导航被中断，然后进行一个新的导航。
+* to: Route: The target routing object that is about to enter
+* from: Route: The route that the current navigation is about to leave
+* next: Function: This method must be called to resolve this hook. The execution effect depends on the calling parameters of the next method.
+  * next(): Perform the next hook in the pipeline. If all hooks are executed, the navigation status is confirmed.
+  * next(false): Interrupt current navigation. If the browser's URL changes (perhaps manually by the user or by the browser's back button), the URL address will be reset to the address corresponding to the from route.
+  * next('/') or next({ path: '/' }): Jump to a different address. The current navigation is interrupted and a new navigation is started.
 
-**确保要调用 next 方法，否则钩子就不会被 resolved。**
-> 完整的方法见`/src/router.js`
+**Make sure to call the next method, otherwise the hook will not be resolved. **
+> For the complete method, see `/src/router.js`
 
-其中，`to.meta`中是我们自定义的数据，其中就包括我们刚刚定义的`requireAuth`字段。通过这个字段来判断该路由是否需要登录权限。需要的话，同时当前应用不存在token，则跳转到登录页面，进行登录。登录成功后跳转到目标路由。
+Among them, `to.meta` contains our customized data, including the `requireAuth` field we just defined. Use this field to determine whether the route requires login permissions. If necessary, and if there is no token in the current application, jump to the login page and log in. After successful login, jump to the target route.
 
-登录拦截到这里就结束了吗？并没有。这种方式只是简单的前端路由控制，并不能真正阻止用户访问需要登录权限的路由。还有一种情况便是：当前token失效了，但是token依然保存在本地。这时候你去访问需要登录权限的路由时，实际上应该让用户重新登录。
-这时候就需要结合 http 拦截器 + 后端接口返回的http 状态码来判断。
+Does login interception end here? not at all. This method is just a simple front-end routing control and cannot really prevent users from accessing routes that require login permissions. There is another situation: the current token has expired, but the token is still saved locally. At this time, when you access a route that requires login permissions, you should actually ask the user to log in again.
+At this time, it needs to be judged by combining the http status code returned by the http interceptor + the backend interface.
 
-#### 第二步：拦截器
-要想统一处理所有http请求和响应，就得用上 axios 的拦截器。通过配置`http response inteceptor`，当后端接口返回`401 Unauthorized（未授权）`，让用户重新登录。
+#### Step 2: Interceptor
+If you want to handle all http requests and responses uniformly, you have to use the axios interceptor. By configuring `http response inteceptor`, when the backend interface returns `401 Unauthorized (unauthorized)`, the user is allowed to log in again.
 
 ```javascript
-// http request 拦截器
+// http request interceptor
 axios.interceptors.request.use(
     config => {
-        if (store.state.token) {  // 判断是否存在token，如果存在的话，则每个http header都加上token
+        if (store.state.token) {  // Determine whether there is a token. If it exists, add the token to each http header.
             config.headers.Authorization = `token ${store.state.token}`;
         }
         return config;
@@ -132,7 +132,7 @@ axios.interceptors.request.use(
         return Promise.reject(err);
     });
 
-// http response 拦截器
+// http response Interceptor
 axios.interceptors.response.use(
     response => {
         return response;
@@ -141,7 +141,7 @@ axios.interceptors.response.use(
         if (error.response) {
             switch (error.response.status) {
                 case 401:
-                    // 返回 401 清除token信息并跳转到登录页面
+                    // Return 401, clear token information and jump to the login page
                     store.commit(types.LOGOUT);
                     router.replace({
                         path: 'login',
@@ -149,15 +149,15 @@ axios.interceptors.response.use(
                     })
             }
         }
-        return Promise.reject(error.response.data)   // 返回接口返回的错误信息
+        return Promise.reject(error.response.data)   // Returns the error information returned by the interface
     });
 ```
->完整的方法见`/src/http.js`.
+>See `/src/http.js` for the complete method.
 
-通过上面这两步，就可以在前端实现登录拦截了。`登出`功能也就很简单，只需要把当前token清除，再跳转到首页即可。
+Through the above two steps, login interception can be implemented on the front end. The `logout` function is very simple. You only need to clear the current token and jump to the homepage.
 
 
-## 运行及构建
+## Run and build
 ``` bash
 # install dependencies
 npm install
